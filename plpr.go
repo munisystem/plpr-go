@@ -14,8 +14,7 @@ type Log struct {
 	Host	string
 	HostPort string
 	Pid	int64
-	StartTime time.Time
-	EndTime	time.Time
+	Time time.Time
 	Duration float64
 	Query string
 }
@@ -31,8 +30,8 @@ func Parse(data, format string) []*Log {
 		"%h": {"Host", "(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})?"},
 		"%r": {"HostPort", "(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\(\\d+\\))?"},
 		"%p": {"Pid", "(\\d+)*"},
-		"%t": {"Endtime", "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} \\D{3})"},
-		"%m": {"MEndtime", "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d* \\D{3})"},
+		"%t": {"Time", "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2} \\D{3})"},
+		"%m": {"Mtime", "(\\d{4}-\\d{2}-\\d{2} \\d{2}:\\d{2}:\\d{2}\\.\\d* \\D{3})"},
 		"%i": {"Command", "([0-9a-zA-Z\\.\\-\\_]*)?"},
 		"%c": {"SessionID", "([0-9a-f\\.]*)"},
 		"%l": {"SequenceNum", "(\\d+)*"},
@@ -100,16 +99,12 @@ func parse(line string) {
 		key := usingFormats[i]
 		value := matches[i+1]
 
-		if key == "Endtime" {
+		if key == "Time" {
 			endtime, _ := time.Parse("2006-01-02 15:04:05 MST", value)
-			starttime := time.Unix(endtime.Unix() - int64(duration / 1000), 0).UTC()
-			log.StartTime = starttime
-			log.EndTime = starttime
-		} else if key == "MEndtime" {
+			log.Time = endtime
+		} else if key == "Mtime" {
 			endtime, _ := time.Parse("2006-01-02 15:04:05.000 MST", value)
-			starttime := time.Unix(0, endtime.UnixNano() - int64(duration * 1000000)).UTC()
-			log.StartTime = starttime
-			log.EndTime = endtime
+			log.Time = endtime
 		} else if key == "Pid" {
 			pid, _ := strconv.ParseInt(value, 10, 64)
 			elem.FieldByName(key).SetInt(pid)

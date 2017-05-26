@@ -17,8 +17,7 @@ func main() {
 	logs := plpr.Parse(body, format)
 	for _, v := range logs {
 		fmt.Println("-----")
-		fmt.Println("StartTime: ", v.StartTime)
-		fmt.Println("EndTime: ", v.EndTime)
+		fmt.Println("Time: ", v.Time)
 		fmt.Println("Host: ", v.Host)
 		fmt.Println("DBName: ", v.DBName)
 		fmt.Println("Duration: ", v.Duration)
