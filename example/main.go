@@ -1,9 +1,10 @@
 package main
 
 import (
-	"github.com/munisystem/plpr-go"
-	"io/ioutil"
 	"fmt"
+	"io/ioutil"
+
+	"github.com/munisystem/plpr-go"
 )
 
 func main() {
