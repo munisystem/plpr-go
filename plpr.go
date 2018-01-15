@@ -1,27 +1,29 @@
 package plpr
 
 import (
-	"time"
-	"regexp"
-	"strings"
-	"strconv"
 	"reflect"
+	"regexp"
+	"strconv"
+	"strings"
+	"time"
 )
 
 type Log struct {
-	User string
-	DBName string
-	Host	string
+	User     string
+	DBName   string
+	Host     string
 	HostPort string
-	Pid	int64
-	Time time.Time
+	Pid      int64
+	Time     time.Time
 	Duration float64
-	Query string
+	Query    string
 }
 
-var regex *regexp.Regexp
-var usingFormats []string
-var logs []*Log
+type parser struct {
+	regex        *regexp.Regexp
+	usingFormats []string
+	logs         []*Log
+}
 
 func Parse(data, format string) []*Log {
 	formats := map[string][]string{
@@ -37,7 +39,7 @@ func Parse(data, format string) []*Log {
 		"%l": {"SequenceNum", "(\\d+)*"},
 	}
 
-	escapes := map[string]string {
+	escapes := map[string]string{
 		".": "\\.",
 		"-": "\\-",
 		"_": "\\_",
@@ -57,14 +59,22 @@ func Parse(data, format string) []*Log {
 		format = strings.Replace(format, v[0], escapes[v[0]], 1)
 	}
 
+	var usingFormats []string
 	matches = regexp.MustCompile("%[udhrptmicl]").FindAllStringSubmatch(format, -1)
 	for _, v := range matches {
 		format = strings.Replace(format, v[0], formats[v[0]][1], 1)
 		usingFormats = append(usingFormats, formats[v[0]][0])
 	}
 
-	regex = regexp.MustCompile(format+regexBase)
+	regex := regexp.MustCompile(format + regexBase)
 	lines := regexp.MustCompile("\r\n|\r|\n").Split(data, -1)
+
+	logs := make([]*Log, 0)
+	p := &parser{
+		regex:        regex,
+		usingFormats: usingFormats,
+		logs:         logs,
+	}
 
 	content := []string{}
 	for _, v := range lines {
@@ -73,30 +83,30 @@ func Parse(data, format string) []*Log {
 				content = append(content, v)
 				continue
 			} else {
-				parse(strings.Join(content, ""))
+				p.parse(strings.Join(content, ""))
 				content = []string{}
 			}
 			content = append(content, v)
 		}
 	}
-	parse(strings.Join(content, ""))
-	return logs
+	p.parse(strings.Join(content, ""))
+	return p.logs
 }
 
-func parse(line string) {
-	m := regex.FindAllStringSubmatch(line, -1)
+func (p *parser) parse(line string) {
+	m := p.regex.FindAllStringSubmatch(line, -1)
 	if len(m) == 0 {
 		return
 	}
 	matches := m[0]
 
 	log := &Log{}
-	duration, _ := strconv.ParseFloat(matches[len(usingFormats)+1], 64)
-	query := matches[len(usingFormats)+3]
+	duration, _ := strconv.ParseFloat(matches[len(p.usingFormats)+1], 64)
+	query := matches[len(p.usingFormats)+3]
 	elem := reflect.ValueOf(log).Elem()
 
-	for i := 0; i < len(usingFormats); i++ {
-		key := usingFormats[i]
+	for i := 0; i < len(p.usingFormats); i++ {
+		key := p.usingFormats[i]
 		value := matches[i+1]
 
 		if key == "Time" {
@@ -115,5 +125,5 @@ func parse(line string) {
 	log.Duration = duration
 	log.Query = query
 
-	logs = append(logs, log)
+	p.logs = append(p.logs, log)
 }
