@@ -50,7 +50,7 @@ func Parse(data, format string) []*Log {
 		"}": "\\}",
 	}
 
-	regexBase := "LOG:  duration: (\\d+\\.\\d+) ms  (execute|statement).*: (.+)?"
+	regexBase := "LOG: +duration: (\\d+\\.\\d+) ms +(execute|statement).*: (.+)?"
 
 	matches := regexp.MustCompile("[\\.\\-\\_\\*\\?\\+\\[\\]\\{\\}]").FindAllStringSubmatch(format, -1)
 	for _, v := range matches {
@@ -68,7 +68,7 @@ func Parse(data, format string) []*Log {
 
 	content := []string{}
 	for _, v := range lines {
-		if strings.Contains(v, ":  ") {
+		if strings.Contains(v, "LOG:") {
 			if len(content) == 0 {
 				content = append(content, v)
 				continue
