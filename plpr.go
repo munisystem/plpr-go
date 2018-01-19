@@ -83,11 +83,11 @@ func Parse(data, format string) []*Log {
 				content = append(content, v)
 				continue
 			} else {
-				p.parse(strings.Join(content, ""))
+				p.parse(strings.Join(content, " "))
 				content = []string{}
 			}
-			content = append(content, v)
 		}
+		content = append(content, v)
 	}
 	p.parse(strings.Join(content, ""))
 	return p.logs
